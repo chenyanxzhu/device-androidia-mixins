@@ -22,7 +22,7 @@ import subprocess
 import signal
 from sys import argv,exit
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '../qemu-6.0.0/python'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '../qemu-7.0.0/python'))
 from qemu import qmp
 
 rtc_wakeup = 0
@@ -108,7 +108,7 @@ def main():
                             cmdCommand = "reboot"
                             signal.signal(signal.SIGTERM, signal.SIG_IGN)
                             time.sleep(3)
-                            process = subprocess.Popen(cmdCommand.split(), stdout=subprocess.PIPE)
+                            process = subprocess.Popen(cmdCommand.split(), stdout=subprocess.PIPE, shell=True)
                             break
                         elif "host-qmp-system-reset" in json.dumps(resp["data"]):
                             print("VM is rebooting")
@@ -116,7 +116,7 @@ def main():
                             cmdCommand = "reboot"
                             signal.signal(signal.SIGTERM, signal.SIG_IGN)
                             time.sleep(3)
-                            process = subprocess.Popen(cmdCommand.split(), stdout=subprocess.PIPE)
+                            process = subprocess.Popen(cmdCommand.split(), stdout=subprocess.PIPE, shell=True)
                             break
                         elif "host-qmp-quit" in json.dumps(resp["data"]):
                             print("VM is getting Shutdown")
@@ -133,10 +133,10 @@ def main():
                         elif "host-error" in json.dumps(resp["data"]):
                             print("VM is getting Shutdown")
                             print("Reason: An error prevents further use of guest and results in shutdown")
-                        cmdCommand = "shutdown -h now"
+                        cmdCommand = "poweroff -p -f"
                         signal.signal(signal.SIGTERM, signal.SIG_IGN)
                         time.sleep(3)
-                        process = subprocess.Popen(cmdCommand.split(), stdout=subprocess.PIPE)
+                        process = subprocess.Popen(cmdCommand.split(), stdout=subprocess.PIPE, shell=True)
                     elif val == "SUSPEND":
 
                         # Read the previous RTC wakeup count
@@ -172,8 +172,8 @@ def main():
                     elif val == "WAKEUP":
                         if rtc_wakeup == 0:
                             time.sleep(1)
-                            cmdCommand = "./sendkey --vm 0 --power 0"
-                            process = subprocess.call(cmdCommand.split(), stdout=subprocess.PIPE)
+                            # send power button event using sendkey binary
+                            process = subprocess.run([argv[2], '--vm', '0', '--power', '0'])
 
         except KeyboardInterrupt:
             print('interrupted!')
